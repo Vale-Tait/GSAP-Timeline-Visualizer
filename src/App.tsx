@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import MonacoEditor from "@monaco-editor/react";
 import { Play, Code, LayoutTemplate, AlertCircle, Sparkles, Loader2 } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
 import { GanttChart } from "./components/GanttChart";
 import { parseGsapCode } from "./lib/gsapMock";
 import { ParsedTimeline } from "./lib/types";
@@ -52,6 +53,7 @@ export default function App() {
 
   const handleParse = () => {
     setIsParsing(true);
+    setTimelines([]);
     
     // Slight artificial delay to indicate work to user
     setTimeout(() => {
@@ -185,24 +187,58 @@ export default function App() {
         </div>
 
         {/* Bottom Section: Visualizer */}
-        <div className="flex flex-col gap-8 w-full pb-12">
-           {timelines.length > 0 ? (
-               timelines.map((tl, index) => (
-                   <GanttChart key={index} timeline={tl} />
-               ))
-           ) : (
-               <div className="bg-[var(--color-claude-card)] rounded-2xl border border-[var(--color-claude-border)] h-[400px] flex items-center justify-center flex-col text-[var(--color-claude-muted)] gap-4 p-8 text-center shadow-sm">
-                   <div className="bg-[var(--color-claude-bg)] p-4 rounded-full border border-[var(--color-claude-border)]">
-                       <LayoutTemplate className="w-8 h-8 opacity-60" />
-                   </div>
-                   <div className="max-w-md">
-                       <h3 className="text-lg font-serif font-medium text-[var(--color-claude-text)] mb-2">No timelines active</h3>
-                       <p className="text-sm leading-relaxed">
-                          Paste your GSAP Javascript code, optionally provide HTML DOM elements, and hit parse to visualize your animation timing.
-                       </p>
-                   </div>
-               </div>
-           )}
+        <div className="flex flex-col gap-8 w-full pb-12 min-h-[400px]">
+           <AnimatePresence mode="wait">
+             {isParsing ? (
+                 <motion.div 
+                   key="parsing"
+                   initial={{ opacity: 0 }}
+                   animate={{ opacity: 1 }}
+                   exit={{ opacity: 0 }}
+                   className="bg-[var(--color-claude-card)] rounded-2xl border border-[var(--color-claude-border)] h-[400px] flex items-center justify-center flex-col text-[var(--color-claude-muted)] gap-4 p-8 text-center shadow-sm"
+                 >
+                     <div className="bg-[var(--color-claude-bg)] p-4 rounded-full border border-[var(--color-claude-border)] shadow-sm animate-pulse">
+                         <Loader2 className="w-8 h-8 opacity-60 animate-spin" />
+                     </div>
+                     <div className="max-w-md mt-2">
+                         <h3 className="text-lg font-serif font-medium text-[var(--color-claude-text)] mb-2">Analyzing your code...</h3>
+                         <p className="text-sm leading-relaxed text-[var(--color-claude-muted)]/80">
+                            Extracting tweens, calculating durations and offsets.
+                         </p>
+                     </div>
+                 </motion.div>
+             ) : timelines.length > 0 ? (
+                 <motion.div
+                   key="timeline"
+                   initial={{ opacity: 0, y: 10 }}
+                   animate={{ opacity: 1, y: 0 }}
+                   transition={{ duration: 0.4 }}
+                   className="flex flex-col gap-8 w-full"
+                 >
+                   {timelines.map((tl, index) => (
+                       <GanttChart key={index} timeline={tl} />
+                   ))}
+                 </motion.div>
+             ) : (
+                 <motion.div 
+                   key="empty"
+                   initial={{ opacity: 0 }}
+                   animate={{ opacity: 1 }}
+                   exit={{ opacity: 0 }}
+                   className="bg-[var(--color-claude-card)] rounded-2xl border border-[var(--color-claude-border)] h-[400px] flex items-center justify-center flex-col text-[var(--color-claude-muted)] gap-4 p-8 text-center shadow-sm"
+                 >
+                     <div className="bg-[var(--color-claude-bg)] p-4 rounded-full border border-[var(--color-claude-border)]">
+                         <LayoutTemplate className="w-8 h-8 opacity-60" />
+                     </div>
+                     <div className="max-w-md">
+                         <h3 className="text-lg font-serif font-medium text-[var(--color-claude-text)] mb-2">No timelines active</h3>
+                         <p className="text-sm leading-relaxed">
+                            Paste your GSAP Javascript code, optionally provide HTML DOM elements, and hit parse to visualize your animation timing.
+                         </p>
+                     </div>
+                 </motion.div>
+             )}
+           </AnimatePresence>
         </div>
       </main>
     </div>
