@@ -1,0 +1,6 @@
+{
+  "name": "GSAP Timeline Visualizer",
+  "description": "Parse and visualize GSAP animations in an interactive Gantt chart.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

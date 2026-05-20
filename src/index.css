@@ -1,0 +1,21 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-claude-bg: #fdfaf6;
+  --color-claude-card: #ffffff;
+  --color-claude-border: #e6e4df;
+  --color-claude-text: #1a1918;
+  --color-claude-muted: #73716c;
+  --color-claude-accent: #d97757;
+  --color-claude-accent-hover: #c96747;
+  
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Newsreader", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+body {
+  background-color: var(--color-claude-bg);
+  color: var(--color-claude-text);
+}
