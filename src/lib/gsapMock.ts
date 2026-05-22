@@ -111,7 +111,8 @@ class MockTimeline {
         }
     } else if (target && typeof target === 'object' && 'tagName' in target) { // Element
         const el = target as Element;
-        targetDesc = `<${el.tagName.toLowerCase()}${el.id ? '#'+el.id : ''}${el.className ? '.' + el.className.split(' ').join('.') : ''}>`;
+        const classNameStr = typeof el.className === 'string' ? el.className : ((el as any).className?.baseVal || '');
+        targetDesc = `<${el.tagName.toLowerCase()}${el.id ? '#'+el.id : ''}${classNameStr ? '.' + classNameStr.split(' ').join('.') : ''}>`;
         resolvedElements = [target];
     } else if (Array.isArray(target) || target instanceof NodeList || target instanceof HTMLCollection) {
         resolvedElements = Array.from(target as any);
@@ -146,7 +147,8 @@ class MockTimeline {
         let displayTargetName = targetDesc;
         if (isStagger && resolvedElements[i] && 'tagName' in resolvedElements[i]) {
             const el = resolvedElements[i] as Element;
-            displayTargetName = `<${el.tagName.toLowerCase()}${el.id ? '#'+el.id : ''}${el.className ? '.' + el.className.split(' ')[0] : ''}>`;
+            const classNameStr = typeof el.className === 'string' ? el.className : ((el as any).className?.baseVal || '');
+            displayTargetName = `<${el.tagName.toLowerCase()}${el.id ? '#'+el.id : ''}${classNameStr ? '.' + classNameStr.split(' ')[0] : ''}>`;
         } else if (isStagger) {
             displayTargetName = `${targetDesc} (Mock Element ${i + 1})`;
         } else if (!isStagger && resolvedElements.length > 1) {
@@ -380,7 +382,30 @@ export function parseGsapCode(code: string, htmlCode: string = ""): ParsedTimeli
     const mockSetTimeout = (cb: any) => executeWithDepth(cb);
     const mockRequestAnimationFrame = (cb: any) => executeWithDepth(cb);
 
-    run(mockGsap, doc, mockWindow, mockSetTimeout, mockRequestAnimationFrame);
+    let originalGetTotalLength: any = null;
+    let originalGetBBox: any = null;
+    if (typeof SVGGeometryElement !== 'undefined') {
+        originalGetTotalLength = SVGGeometryElement.prototype.getTotalLength;
+        // Monkey patch to prevent "non-rendered element" error during mock execution
+        SVGGeometryElement.prototype.getTotalLength = function() { return 100; };
+    }
+    if (typeof SVGGraphicsElement !== 'undefined') {
+        originalGetBBox = SVGGraphicsElement.prototype.getBBox;
+        SVGGraphicsElement.prototype.getBBox = function() { 
+            return { x: 0, y: 0, width: 100, height: 100, bottom: 100, right: 100, left: 0, top: 0, toJSON: () => ({}) } as DOMRect;
+        };
+    }
+
+    try {
+      run(mockGsap, doc, mockWindow, mockSetTimeout, mockRequestAnimationFrame);
+    } finally {
+        if (typeof SVGGeometryElement !== 'undefined' && originalGetTotalLength) {
+            SVGGeometryElement.prototype.getTotalLength = originalGetTotalLength;
+        }
+        if (typeof SVGGraphicsElement !== 'undefined' && originalGetBBox) {
+            SVGGraphicsElement.prototype.getBBox = originalGetBBox;
+        }
+    }
   } catch (err: any) {
     throw new Error("Syntax error or invalid JS code. " + (err.message || ''));
   }
